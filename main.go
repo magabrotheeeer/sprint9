@@ -14,19 +14,19 @@ const (
 
 func generateRandomElements(size int) []int {
 	if size <= 0 {
-		return []int{}
+		return nil
 	}
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	res := make([]int, size)
 	for i := range size {
-		res[i] = rnd.Intn(1_000_000) + 1
+		res[i] = rnd.Int()
 	}
 	return res
 }
 
 func maximum(data []int) int {
 	if len(data) == 0 {
-		return -1
+		return 0
 	}
 	if len(data) == 1 {
 		return data[0]
@@ -42,7 +42,7 @@ func maximum(data []int) int {
 
 func maxChunks(data []int) int {
 	if len(data) == 0 {
-		return -1
+		return 0
 	}
 	sizePart := len(data) / CHUNKS
 	maxResults := make([]int, CHUNKS)
@@ -57,13 +57,11 @@ func maxChunks(data []int) int {
 		wg.Add(1)
 		go func(idx int, part []int) {
 			defer wg.Done()
-			localmax := maximum(part)
-			maxResults[idx] = localmax
+			maxResults[idx] = maximum(part)
 		}(i, data[start:end])
 	}
 	wg.Wait()
-	finalMax := maximum(maxResults)
-	return finalMax
+	return maximum(maxResults)
 }
 
 func main() {
