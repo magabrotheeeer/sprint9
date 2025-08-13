@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	"sync"
+	"time"
 )
 
 const (
@@ -9,32 +12,73 @@ const (
 	CHUNKS = 8
 )
 
-// generateRandomElements generates random elements.
 func generateRandomElements(size int) []int {
-	// ваш код здесь
+	if size <= 0 {
+		return nil
+	}
+	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+	res := make([]int, size)
+	for i := range size {
+		res[i] = rnd.Int()
+	}
+	return res
 }
 
-// maximum returns the maximum number of elements.
 func maximum(data []int) int {
-	// ваш код здесь
+	if len(data) == 0 {
+		return 0
+	}
+	if len(data) == 1 {
+		return data[0]
+	}
+	maxNumber := data[0]
+	for _, v := range data {
+		if v > maxNumber {
+			maxNumber = v
+		}
+	}
+	return maxNumber
 }
 
-// maxChunks returns the maximum number of elements in a chunks.
 func maxChunks(data []int) int {
-	// ваш код здесь
+	if len(data) == 0 {
+		return 0
+	}
+	sizePart := len(data) / CHUNKS
+	maxResults := make([]int, CHUNKS)
+	var wg sync.WaitGroup
+
+	for i := range CHUNKS {
+		start := i * sizePart
+		end := start + sizePart
+		if i == CHUNKS-1 {
+			end = len(data)
+		}
+		wg.Add(1)
+		go func(idx int, part []int) {
+			defer wg.Done()
+			maxResults[idx] = maximum(part)
+		}(i, data[start:end])
+	}
+	wg.Wait()
+	return maximum(maxResults)
 }
 
 func main() {
 	fmt.Printf("Генерируем %d целых чисел", SIZE)
 	// ваш код здесь
-
+	randomElements := generateRandomElements(SIZE)
 	fmt.Println("Ищем максимальное значение в один поток")
-	// ваш код здесь
+	startOneRoutine := time.Now().UTC()
+	max := maximum(randomElements)
+	endOneRoutine := time.Now().UTC().Sub(startOneRoutine).Microseconds()
 
-	fmt.Printf("Максимальное значение элемента: %d\nВремя поиска: %d ms\n", max, elapsed)
+	fmt.Printf("Максимальное значение элемента: %d\nВремя поиска: %d ms\n", max, endOneRoutine)
 
 	fmt.Printf("Ищем максимальное значение в %d потоков", CHUNKS)
 	// ваш код здесь
-
-	fmt.Printf("Максимальное значение элемента: %d\nВремя поиска: %d ms\n", max, elapsed)
+	startRoutines := time.Now().UTC()
+	max = maxChunks(randomElements)
+	endRoutines := time.Now().UTC().Sub(startRoutines).Microseconds()
+	fmt.Printf("Максимальное значение элемента: %d\nВремя поиска: %d ms\n", max, endRoutines)
 }
